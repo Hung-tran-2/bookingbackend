@@ -35,6 +35,7 @@ Room.belongsTo(RoomType, {
     foreignKey: 'room_type_id',
     as: 'roomType'
 });
+module.exports = { RoomType, Room };
 
 // Booking <-> Room (Many-to-Many through BookingRoom)
 Booking.belongsToMany(Room, {

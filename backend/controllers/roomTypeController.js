@@ -1,123 +1,147 @@
-const { RoomType } = require('../models');
-const { successResponse, errorResponse, paginationResponse } = require('../utils/responseFormatter');
+const { RoomType } = require("../models");
+const { Room } = require("../models");
+const {
+  successResponse,
+  errorResponse,
+  paginationResponse,
+} = require("../utils/responseFormatter");
 
 /**
  * Get all room types
+ * Lấy danh sách tất cả loại phòng
+ * GET
  */
 const getAllRoomTypes = async (req, res) => {
-    try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const offset = (page - 1) * limit;
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
 
-        const { count, rows } = await RoomType.findAndCountAll({
-            limit,
-            offset,
-            order: [['room_type_id', 'ASC']]
-        });
+    const { count, rows } = await RoomType.findAndCountAll({
+      limit,
+      offset,
+      order: [["room_type_id", "ASC"]],
+    });
 
-        res.json(paginationResponse(rows, page, limit, count));
-    } catch (error) {
-        res.status(500).json(errorResponse('Error fetching room types', error.message));
-    }
+    res.json(paginationResponse(rows, page, limit, count));
+  } catch (error) {
+    res
+      .status(500)
+      .json(errorResponse("Error fetching room types", error.message));
+  }
 };
 
 /**
  * Get active room types only
+ * Lấy Danh sách các hoạt động
  */
 const getActiveRoomTypes = async (req, res) => {
-    try {
-        const roomTypes = await RoomType.findAll({
-            where: { is_active: true },
-            order: [['price', 'ASC']]
-        });
+  try {
+    const roomTypes = await RoomType.findAll({
+      where: { is_active: true },
+      order: [["base_price", "ASC"]],
+    });
 
-        res.json(successResponse(roomTypes));
-    } catch (error) {
-        res.status(500).json(errorResponse('Error fetching active room types', error.message));
-    }
+    res.json(successResponse(roomTypes));
+  } catch (error) {
+    res
+      .status(500)
+      .json(errorResponse("Error fetching active room types", error.message));
+  }
 };
 
 /**
  * Get room type by ID
  */
 const getRoomTypeById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const roomType = await RoomType.findByPk(id, {
-            include: [{
-                association: 'rooms',
-                attributes: ['room_id', 'room_number', 'status']
-            }]
-        });
+  try {
+    const { id } = req.params;
 
-        if (!roomType) {
-            return res.status(404).json(errorResponse('Room type not found'));
-        }
+    const roomType = await RoomType.findByPk(id, {
+      include: [
+        {
+          model: Room,
+          as: "rooms",
+          attributes: ["room_id", "room_number", "status"],
+        },
+      ],
+    });
 
-        res.json(successResponse(roomType));
-    } catch (error) {
-        res.status(500).json(errorResponse('Error fetching room type', error.message));
+    if (!roomType) {
+      return res.status(404).json(errorResponse("Room type not found"));
     }
+
+    res.json(successResponse(roomType));
+  } catch (error) {
+    res
+      .status(500)
+      .json(errorResponse("Error fetching room type", error.message));
+  }
 };
 
 /**
  * Create new room type
+ * Tạo một loại phòng mới
  */
 const createRoomType = async (req, res) => {
-    try {
-        const { name, capacity, price, description, is_active } = req.body;
+  try {
+    const { name, capacity, base_price, description, is_active } = req.body;
 
-        // Validation
-        if (!name || !capacity || !price) {
-            return res.status(400).json(errorResponse('Name, capacity, and price are required'));
-        }
-
-        const roomType = await RoomType.create({
-            name,
-            capacity,
-            price,
-            description,
-            is_active: is_active !== undefined ? is_active : true
-        });
-
-        res.status(201).json(successResponse(roomType, 'Room type created successfully'));
-    } catch (error) {
-        if (error.name === 'SequelizeValidationError') {
-            return res.status(400).json(errorResponse('Validation error', error.errors.map(e => e.message)));
-        }
-        res.status(500).json(errorResponse('Error creating room type', error.message));
+    if (!name || !capacity || !base_price) {
+      return res.status(400).json(errorResponse("Missing required fields"));
     }
+
+    const exist = await RoomType.findOne({ where: { name } });
+    if (exist) {
+      return res
+        .status(400)
+        .json(errorResponse("Room type name already exists"));
+    }
+
+    const roomType = await RoomType.create({
+      name,
+      capacity,
+      base_price,
+      description,
+      is_active,
+    });
+
+    res.status(201).json(successResponse(roomType, "Created successfully"));
+  } catch (error) {
+    res
+      .status(500)
+      .json(errorResponse("Error creating room type", error.message));
+  }
 };
 
 /**
  * Update room type
  */
 const updateRoomType = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, capacity, price, description, is_active } = req.body;
+  try {
+    const { id } = req.params;
+    const { name, capacity, base_price, description, is_active } = req.body;
 
-        const roomType = await RoomType.findByPk(id);
-        if (!roomType) {
-            return res.status(404).json(errorResponse('Room type not found'));
-        }
+    const roomType = await RoomType.findByPk(id);
 
-        await roomType.update({
-            name: name || roomType.name,
-            capacity: capacity || roomType.capacity,
-            price: price || roomType.price,
-            description: description !== undefined ? description : roomType.description,
-            is_active: is_active !== undefined ? is_active : roomType.is_active
-        });
-
-        res.json(successResponse(roomType, 'Room type updated successfully'));
-    } catch (error) {
-        if (error.name === 'SequelizeValidationError') {
-            return res.status(400).json(errorResponse('Validation error', error.errors.map(e => e.message)));
-        }
-        res.status(500).json(errorResponse('Error updating room type', error.message));
+    if (!roomType) {
+      return res.status(404).json(errorResponse("Room type not found"));
     }
+
+    await roomType.update({
+      name: name ?? roomType.name,
+      capacity: capacity ?? roomType.capacity,
+      base_price: base_price ?? roomType.base_price,
+      description: description ?? roomType.description,
+      is_active: is_active ?? roomType.is_active,
+    });
+
+    res.json(successResponse(roomType, "Updated successfully"));
+  } catch (error) {
+    res
+      .status(500)
+      .json(errorResponse("Error updating room type", error.message));
+  }
 };
 
 /**
@@ -125,26 +149,39 @@ const updateRoomType = async (req, res) => {
  */
 // Nếu tồn tại rooms thì không được xóa
 const deleteRoomType = async (req, res) => {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        const roomType = await RoomType.findByPk(id);
-        if (!roomType) {
-            return res.status(404).json(errorResponse('Room type not found'));
-        }
-
-        await roomType.destroy();
-        res.json(successResponse(null, 'Room type deleted successfully'));
-    } catch (error) {
-        res.status(500).json(errorResponse('Error deleting room type', error.message));
+    const roomType = await RoomType.findByPk(id);
+    if (!roomType) {
+      return res.status(404).json(errorResponse("Room type not found"));
     }
+
+    // Kiểm tra phòng đang dùng loại này
+    const roomsUsing = await Room.count({ where: { room_type_id: id } });
+    if (roomsUsing > 0) {
+      return res
+        .status(400)
+        .json(
+          errorResponse("Cannot delete: There are rooms using this room type")
+        );
+    }
+
+    await roomType.destroy();
+
+    res.json(successResponse(null, "Deleted successfully"));
+  } catch (error) {
+    res
+      .status(500)
+      .json(errorResponse("Error deleting room type", error.message));
+  }
 };
 
 module.exports = {
-    getAllRoomTypes,
-    getActiveRoomTypes,
-    getRoomTypeById,
-    createRoomType,
-    updateRoomType,
-    deleteRoomType
+  getAllRoomTypes,
+  getActiveRoomTypes,
+  getRoomTypeById,
+  createRoomType,
+  updateRoomType,
+  deleteRoomType,
 };

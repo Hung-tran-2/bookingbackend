@@ -6,7 +6,6 @@ const Room = sequelize.define('Room', {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
-        comment: 'ID phòng'
     },
     room_number: {
         type: DataTypes.STRING(20),
@@ -17,21 +16,18 @@ const Room = sequelize.define('Room', {
     room_type_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        comment: 'Loại phòng',
         references: {
             model: 'room_types',
             key: 'room_type_id'
         }
     },
     status: {
-        type: DataTypes.ENUM('available', 'booked', 'maintenance'),
-        defaultValue: 'available',
-        comment: 'Trạng thái'
+        type: DataTypes.ENUM('available', 'booked', 'occupied', 'cleaning', 'maintenance'),
+        defaultValue: 'available'
     },
     image: {
         type: DataTypes.TEXT,
-        allowNull: true,
-        comment: 'hình ảnh'
+        allowNull: true
     },
     created_at: {
         type: DataTypes.DATE,
@@ -40,7 +36,6 @@ const Room = sequelize.define('Room', {
 }, {
     tableName: 'rooms',
     timestamps: false,
-    comment: 'Danh sách phòng'
 });
 
 module.exports = Room;

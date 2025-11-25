@@ -17,7 +17,7 @@ const getAllRooms = async (req, res) => {
             include: [{
                 model: RoomType,
                 as: 'roomType',
-                attributes: ['room_type_id', 'name', 'price', 'capacity']
+                attributes: ['room_type_id', 'name', 'base_price', 'capacity']
             }],
             order: [['room_number', 'ASC']]
         });
@@ -165,6 +165,13 @@ const deleteRoom = async (req, res) => {
         const room = await Room.findByPk(id);
         if (!room) {
             return res.status(404).json(errorResponse('Room not found'));
+        }
+
+        const bookingCount = await Booking.count({ where: { room_id: id } });
+        if (bookingCount > 0) {
+            return res.status(400).json(
+                errorResponse('Cannot delete: room already has bookings')
+            );
         }
 
         await room.destroy();
