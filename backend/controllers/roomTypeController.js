@@ -123,6 +123,7 @@ const updateRoomType = async (req, res) => {
 /**
  * Delete room type
  */
+// Nếu tồn tại rooms thì không được xóa
 const deleteRoomType = async (req, res) => {
     try {
         const { id } = req.params;

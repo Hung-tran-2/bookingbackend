@@ -157,6 +157,7 @@ const updateRoomStatus = async (req, res) => {
 /**
  * Delete room
  */
+// Chỉ xóa những phòng trống chưa có đơn nào
 const deleteRoom = async (req, res) => {
     try {
         const { id } = req.params;
