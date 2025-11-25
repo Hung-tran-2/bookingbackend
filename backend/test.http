@@ -1,0 +1,606 @@
+### Hotel Booking API - Complete Test Suite
+### Base URL
+@baseUrl = http://localhost:5000/api
+@token = YOUR_TOKEN_HERE
+
+### ============================================
+### 1. AUTHENTICATION APIs
+### ============================================
+
+### 1.1 Register new user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "full_name": "Test User",
+  "email": "test@example.com",
+  "password": "test123",
+  "phone": "0123456789",
+  "role": "user"
+}
+
+### 1.2 Login
+# @name login
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "test@example.com",
+  "password": "test123"
+}
+
+### 1.3 Get Profile (Protected)
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{token}}
+
+### 1.4 Update Profile (Protected)
+PUT {{baseUrl}}/auth/profile
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "full_name": "Test User Updated",
+  "phone": "0987654321"
+}
+
+### 1.5 Change Password (Protected)
+POST {{baseUrl}}/auth/change-password
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "current_password": "test123",
+  "new_password": "newtest123"
+}
+
+### ============================================
+### 2. USERS APIs
+### ============================================
+
+### 2.1 Get all users (Paginated)
+GET {{baseUrl}}/users?page=1&limit=10
+
+### 2.2 Get user by ID
+GET {{baseUrl}}/users/1
+
+### 2.3 Create user
+POST {{baseUrl}}/users
+Content-Type: application/json
+
+{
+  "full_name": "New User",
+  "email": "newuser@example.com",
+  "password": "password123",
+  "phone": "0111222333",
+  "role": "user"
+}
+
+### 2.4 Update user
+PUT {{baseUrl}}/users/1
+Content-Type: application/json
+
+{
+  "full_name": "Updated User Name",
+  "phone": "0999888777"
+}
+
+### 2.5 Delete user
+DELETE {{baseUrl}}/users/1
+
+### ============================================
+### 3. ROOM TYPES APIs
+### ============================================
+
+### 3.1 Get all room types
+GET {{baseUrl}}/room-types?page=1&limit=10
+
+### 3.2 Get active room types only
+GET {{baseUrl}}/room-types/active
+
+### 3.3 Get room type by ID
+GET {{baseUrl}}/room-types/1
+
+### 3.4 Create room type
+POST {{baseUrl}}/room-types
+Content-Type: application/json
+
+{
+  "name": "Phòng Deluxe",
+  "capacity": 2,
+  "price": 800000,
+  "description": "Phòng cao cấp 2 người",
+  "is_active": true
+}
+
+### 3.5 Create room type - Standard
+POST {{baseUrl}}/room-types
+Content-Type: application/json
+
+{
+  "name": "Phòng Standard",
+  "capacity": 2,
+  "price": 500000,
+  "description": "Phòng tiêu chuẩn 2 người",
+  "is_active": true
+}
+
+### 3.6 Create room type - Suite
+POST {{baseUrl}}/room-types
+Content-Type: application/json
+
+{
+  "name": "Phòng Suite",
+  "capacity": 4,
+  "price": 1500000,
+  "description": "Phòng cao cấp 4 người",
+  "is_active": true
+}
+
+### 3.7 Update room type
+PUT {{baseUrl}}/room-types/1
+Content-Type: application/json
+
+{
+  "name": "Phòng Deluxe Premium",
+  "price": 900000,
+  "description": "Phòng cao cấp nâng cấp"
+}
+
+### 3.8 Delete room type
+DELETE {{baseUrl}}/room-types/1
+
+### ============================================
+### 4. ROOMS APIs
+### ============================================
+
+### 4.1 Get all rooms
+GET {{baseUrl}}/rooms?page=1&limit=10
+
+### 4.2 Get available rooms by date
+GET {{baseUrl}}/rooms/available?checkin_date=2025-12-01&checkout_date=2025-12-05
+
+### 4.3 Get room by ID
+GET {{baseUrl}}/rooms/1
+
+### 4.4 Create room
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "room_number": "101",
+  "room_type_id": 1,
+  "status": "available",
+  "image": "https://example.com/room101.jpg"
+}
+
+### 4.5 Create multiple rooms
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "room_number": "102",
+  "room_type_id": 1,
+  "status": "available"
+}
+
+###
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "room_number": "201",
+  "room_type_id": 2,
+  "status": "available"
+}
+
+###
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "room_number": "301",
+  "room_type_id": 3,
+  "status": "available"
+}
+
+### 4.6 Update room
+PUT {{baseUrl}}/rooms/1
+Content-Type: application/json
+
+{
+  "status": "maintenance",
+  "image": "https://example.com/room101-updated.jpg"
+}
+
+### 4.7 Update room status only
+PATCH {{baseUrl}}/rooms/1/status
+Content-Type: application/json
+
+{
+  "status": "available"
+}
+
+### 4.8 Delete room
+DELETE {{baseUrl}}/rooms/1
+
+### ============================================
+### 5. BOOKINGS APIs
+### ============================================
+
+### 5.1 Get all bookings
+GET {{baseUrl}}/bookings?page=1&limit=10
+Authorization: Bearer {{token}}
+
+### 5.2 Get bookings by status
+GET {{baseUrl}}/bookings?status=confirmed
+Authorization: Bearer {{token}}
+
+### 5.3 Get booking by ID
+GET {{baseUrl}}/bookings/1
+Authorization: Bearer {{token}}
+
+### 5.4 Create booking (Single room)
+POST {{baseUrl}}/bookings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "user_id": 1,
+  "checkin_date": "2025-12-01",
+  "checkout_date": "2025-12-05",
+  "source": "website",
+  "rooms": [
+    {
+      "room_id": 1,
+      "price_per_night": 800000
+    }
+  ]
+}
+
+### 5.5 Create booking (Multiple rooms)
+POST {{baseUrl}}/bookings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "user_id": 1,
+  "checkin_date": "2025-12-10",
+  "checkout_date": "2025-12-15",
+  "source": "mobile_app",
+  "rooms": [
+    {
+      "room_id": 2,
+      "price_per_night": 800000
+    },
+    {
+      "room_id": 3,
+      "price_per_night": 500000
+    }
+  ]
+}
+
+### 5.6 Update booking status to confirmed
+PATCH {{baseUrl}}/bookings/1/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "confirmed"
+}
+
+### 5.7 Update booking status to checked_in
+PATCH {{baseUrl}}/bookings/1/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "checked_in"
+}
+
+### 5.8 Update booking status to checked_out
+PATCH {{baseUrl}}/bookings/1/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "checked_out"
+}
+
+### 5.9 Cancel booking
+PATCH {{baseUrl}}/bookings/1/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "cancelled"
+}
+
+### 5.10 Delete booking
+DELETE {{baseUrl}}/bookings/1
+Authorization: Bearer {{token}}
+
+### ============================================
+### 6. SERVICES APIs
+### ============================================
+
+### 6.1 Get all services
+GET {{baseUrl}}/services?page=1&limit=10
+
+### 6.2 Get service by ID
+GET {{baseUrl}}/services/1
+
+### 6.3 Create service - Laundry
+POST {{baseUrl}}/services
+Content-Type: application/json
+
+{
+  "name": "Giặt ủi",
+  "price": 50000,
+  "unit": "bộ"
+}
+
+### 6.4 Create service - Breakfast
+POST {{baseUrl}}/services
+Content-Type: application/json
+
+{
+  "name": "Ăn sáng",
+  "price": 100000,
+  "unit": "suất"
+}
+
+### 6.5 Create service - Spa
+POST {{baseUrl}}/services
+Content-Type: application/json
+
+{
+  "name": "Massage/Spa",
+  "price": 300000,
+  "unit": "giờ"
+}
+
+### 6.6 Create service - Airport Transfer
+POST {{baseUrl}}/services
+Content-Type: application/json
+
+{
+  "name": "Đưa đón sân bay",
+  "price": 200000,
+  "unit": "chuyến"
+}
+
+### 6.7 Update service
+PUT {{baseUrl}}/services/1
+Content-Type: application/json
+
+{
+  "name": "Giặt ủi cao cấp",
+  "price": 70000
+}
+
+### 6.8 Delete service
+DELETE {{baseUrl}}/services/1
+
+### ============================================
+### 7. SERVICE USAGE APIs
+### ============================================
+
+### 7.1 Get services for a booking
+GET {{baseUrl}}/service-usage/1/services
+Authorization: Bearer {{token}}
+
+### 7.2 Add service to booking - Laundry
+POST {{baseUrl}}/service-usage/1/services
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "service_id": 1,
+  "quantity": 2
+}
+
+### 7.3 Add service to booking - Breakfast
+POST {{baseUrl}}/service-usage/1/services
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "service_id": 2,
+  "quantity": 4
+}
+
+### 7.4 Add service to booking - Spa
+POST {{baseUrl}}/service-usage/1/services
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "service_id": 3,
+  "quantity": 1
+}
+
+### 7.5 Delete service usage
+DELETE {{baseUrl}}/service-usage/1
+Authorization: Bearer {{token}}
+
+### ============================================
+### 8. PAYMENTS APIs
+### ============================================
+
+### 8.1 Get payments for a booking
+GET {{baseUrl}}/payments/booking/1
+Authorization: Bearer {{token}}
+
+### 8.2 Get payment by ID
+GET {{baseUrl}}/payments/1
+Authorization: Bearer {{token}}
+
+### 8.3 Create payment - Cash
+POST {{baseUrl}}/payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_id": 1,
+  "amount": 3200000,
+  "method": "cash"
+}
+
+### 8.4 Create payment - MoMo
+POST {{baseUrl}}/payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_id": 1,
+  "amount": 3200000,
+  "method": "momo",
+  "transaction_code": "MOMO123456789"
+}
+
+### 8.5 Create payment - VNPay
+POST {{baseUrl}}/payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_id": 1,
+  "amount": 3200000,
+  "method": "vnpay",
+  "transaction_code": "VNPAY987654321"
+}
+
+### 8.6 Delete payment
+DELETE {{baseUrl}}/payments/1
+Authorization: Bearer {{token}}
+
+### ============================================
+### 9. INVOICES APIs
+### ============================================
+
+### 9.1 Get invoice by booking ID
+GET {{baseUrl}}/invoices/booking/1
+Authorization: Bearer {{token}}
+
+### 9.2 Generate invoice for booking
+POST {{baseUrl}}/invoices/generate/1
+Authorization: Bearer {{token}}
+
+### 9.3 Delete invoice
+DELETE {{baseUrl}}/invoices/1
+Authorization: Bearer {{token}}
+
+### ============================================
+### 10. HEALTH CHECK & INFO
+### ============================================
+
+### 10.1 Health check
+GET http://localhost:5000/health
+
+### 10.2 API Info
+GET {{baseUrl}}
+
+### ============================================
+### COMPLETE WORKFLOW TEST
+### ============================================
+
+### Step 1: Register user
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "full_name": "Workflow Test User",
+  "email": "workflow@test.com",
+  "password": "test123",
+  "phone": "0123456789"
+}
+
+### Step 2: Login (Copy token from response)
+# @name workflowLogin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "workflow@test.com",
+  "password": "test123"
+}
+
+### Step 3: Create room type
+POST {{baseUrl}}/room-types
+Content-Type: application/json
+
+{
+  "name": "Test Room Type",
+  "capacity": 2,
+  "price": 500000,
+  "is_active": true
+}
+
+### Step 4: Create room
+POST {{baseUrl}}/rooms
+Content-Type: application/json
+
+{
+  "room_number": "TEST101",
+  "room_type_id": 1,
+  "status": "available"
+}
+
+### Step 5: Create booking
+POST {{baseUrl}}/bookings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "user_id": 1,
+  "checkin_date": "2025-12-01",
+  "checkout_date": "2025-12-05",
+  "rooms": [
+    {
+      "room_id": 1,
+      "price_per_night": 500000
+    }
+  ]
+}
+
+### Step 6: Add service to booking
+POST {{baseUrl}}/service-usage/1/services
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "service_id": 1,
+  "quantity": 2
+}
+
+### Step 7: Create payment
+POST {{baseUrl}}/payments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "booking_id": 1,
+  "amount": 2000000,
+  "method": "cash"
+}
+
+### Step 8: Generate invoice
+POST {{baseUrl}}/invoices/generate/1
+Authorization: Bearer {{token}}
+
+### Step 9: Get invoice
+GET {{baseUrl}}/invoices/booking/1
+Authorization: Bearer {{token}}
+
+### Step 10: Update booking status to confirmed
+PATCH {{baseUrl}}/bookings/1/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "confirmed"
+}
+
+### ============================================
+### END OF TEST SUITE
+### ============================================
