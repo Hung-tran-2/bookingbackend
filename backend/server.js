@@ -3,6 +3,8 @@ const cors = require('cors');
 require('dotenv').config();
 
 const { sequelize } = require('./config/database');
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/swagger');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -11,6 +13,17 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Hotel Booking API Documentation'
+}));
+
+// Redirect /docs to /api-docs for convenience
+app.get('/docs', (req, res) => {
+    res.redirect('/api-docs');
+});
 
 // Routes
 const routes = require('./routes');

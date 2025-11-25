@@ -53,10 +53,15 @@ const getUserById = async (req, res) => {
  */
 const createUser = async (req, res) => {
     try {
-        const { full_name, phone, email, id_card, password, role } = req.body;
+        // Chỉ nhận 4 trường: full_name, email, password, phone
+        const { full_name, email, password, phone } = req.body;
 
         if (!full_name) {
             return res.status(400).json(errorResponse('Full name is required'));
+        }
+
+        if (!email) {
+            return res.status(400).json(errorResponse('Email is required'));
         }
 
         if (!password) {
@@ -72,11 +77,11 @@ const createUser = async (req, res) => {
 
         const user = await User.create({
             full_name,
-            phone,
             email,
-            id_card,
             password: hashedPassword,
-            role: role || 'user'
+            phone,
+            id_card: null, // Set null để frontend có thể cập nhật sau
+            role: 'user' // Mặc định role là user
         });
 
         const userResponse = { ...user.toJSON() };
