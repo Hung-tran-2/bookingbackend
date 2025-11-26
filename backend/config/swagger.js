@@ -73,7 +73,7 @@ const options = {
                             type: 'integer',
                             description: 'Maximum number of guests'
                         },
-                        price: {
+                        base_price: {
                             type: 'number',
                             format: 'decimal',
                             description: 'Price per night'

@@ -82,17 +82,20 @@ const getRoomById = async (req, res) => {
  */
 const createRoom = async (req, res) => {
     try {
-        const { room_number, room_type_id, status, image } = req.body;
+        const { room_number, room_type_id, status } = req.body;
 
         if (!room_number || !room_type_id) {
             return res.status(400).json(errorResponse('Room number and room type are required'));
         }
 
+        // Get image path from uploaded file
+        const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
         const room = await Room.create({
             room_number,
             room_type_id,
             status: status || 'available',
-            image
+            image: imagePath
         });
 
         res.status(201).json(successResponse(room, 'Room created successfully'));
@@ -110,18 +113,21 @@ const createRoom = async (req, res) => {
 const updateRoom = async (req, res) => {
     try {
         const { id } = req.params;
-        const { room_number, room_type_id, status, image } = req.body;
+        const { room_number, room_type_id, status } = req.body;
 
         const room = await Room.findByPk(id);
         if (!room) {
             return res.status(404).json(errorResponse('Room not found'));
         }
 
+        // Get new image path if file was uploaded
+        const imagePath = req.file ? `/uploads/${req.file.filename}` : room.image;
+
         await room.update({
             room_number: room_number || room.room_number,
             room_type_id: room_type_id || room.room_type_id,
             status: status || room.status,
-            image: image !== undefined ? image : room.image
+            image: imagePath
         });
 
         res.json(successResponse(room, 'Room updated successfully'));

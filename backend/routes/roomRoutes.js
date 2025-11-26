@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const roomController = require('../controllers/roomController');
+const upload = require('../middleware/upload');
 
 /**
  * @swagger
@@ -136,11 +137,11 @@ router.get('/:id', roomController.getRoomById);
  *     tags:
  *       - Rooms
  *     summary: Create a new room
- *     description: Create a new room in the system
+ *     description: Create a new room with optional image upload
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -155,11 +156,12 @@ router.get('/:id', roomController.getRoomById);
  *                 example: 1
  *               status:
  *                 type: string
- *                 enum: [available, occupied, maintenance, reserved]
+ *                 enum: [available, booked, maintenance]
  *                 default: available
  *               image:
  *                 type: string
- *                 example: "https://example.com/room.jpg"
+ *                 format: binary
+ *                 description: Room image file (JPEG, JPG, PNG, GIF, max 5MB)
  *     responses:
  *       201:
  *         description: Room created successfully
@@ -174,7 +176,7 @@ router.get('/:id', roomController.getRoomById);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/', roomController.createRoom);
+router.post('/', upload.single('image'), roomController.createRoom);
 
 /**
  * @swagger
@@ -183,7 +185,7 @@ router.post('/', roomController.createRoom);
  *     tags:
  *       - Rooms
  *     summary: Update room
- *     description: Update an existing room's information
+ *     description: Update an existing room's information with optional new image
  *     parameters:
  *       - in: path
  *         name: id
@@ -194,7 +196,7 @@ router.post('/', roomController.createRoom);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -204,9 +206,11 @@ router.post('/', roomController.createRoom);
  *                 type: integer
  *               status:
  *                 type: string
- *                 enum: [available, occupied, maintenance, reserved]
+ *                 enum: [available, booked, maintenance]
  *               image:
  *                 type: string
+ *                 format: binary
+ *                 description: New room image file (JPEG, JPG, PNG, GIF, max 5MB)
  *     responses:
  *       200:
  *         description: Room updated successfully
@@ -221,7 +225,7 @@ router.post('/', roomController.createRoom);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/:id', roomController.updateRoom);
+router.put('/:id', upload.single('image'), roomController.updateRoom);
 
 /**
  * @swagger
