@@ -120,6 +120,7 @@ const getPaymentById = async (req, res) => {
 /**
  * Delete payment
  */
+// 
 const deletePayment = async (req, res) => {
   try {
     const { id } = req.params;
@@ -127,6 +128,11 @@ const deletePayment = async (req, res) => {
     const payment = await Payment.findByPk(id);
     if (!payment) {
       return res.status(404).json(errorResponse('Payment not found'));
+    }
+    if(payment.status === 1) {
+      // Kiểm tra nếu như hoá đơn đã được thanh toán thì không được xoá
+    
+      return res.status(404).json(errorResponse('Payment has money'));
     }
 
     await payment.destroy();
