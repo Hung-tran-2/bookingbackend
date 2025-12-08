@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const roomController = require('../controllers/roomController');
+const upload = require('../middlewares/upload');
 
 /**
  * @swagger
@@ -174,7 +175,7 @@ router.get('/:id', roomController.getRoomById);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.post('/', roomController.createRoom);
+router.post('/', upload.single('image'), roomController.createRoom);
 
 /**
  * @swagger
@@ -183,7 +184,7 @@ router.post('/', roomController.createRoom);
  *     tags:
  *       - Rooms
  *     summary: Update room
- *     description: Update an existing room's information
+ *     description: Update an existing room's information (with optional new image)
  *     parameters:
  *       - in: path
  *         name: id
@@ -194,7 +195,7 @@ router.post('/', roomController.createRoom);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -204,9 +205,11 @@ router.post('/', roomController.createRoom);
  *                 type: integer
  *               status:
  *                 type: string
- *                 enum: [available, occupied, maintenance, reserved]
+ *                 enum: [available, booked, occupied, cleaning, maintenance]
  *               image:
  *                 type: string
+ *                 format: binary
+ *                 description: New room image file
  *     responses:
  *       200:
  *         description: Room updated successfully
@@ -221,7 +224,7 @@ router.post('/', roomController.createRoom);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-router.put('/:id', roomController.updateRoom);
+router.put('/:id', upload.single('image'), roomController.updateRoom);
 
 /**
  * @swagger
@@ -249,7 +252,7 @@ router.put('/:id', roomController.updateRoom);
  *             properties:
  *               status:
  *                 type: string
- *                 enum: [available, occupied, maintenance, reserved]
+ *                 enum: [available, booked, occupied, cleaning, maintenance]
  *                 example: maintenance
  *     responses:
  *       200:

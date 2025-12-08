@@ -8,8 +8,7 @@ const {
 
 /**
  * Get all room types
- * Lấy danh sách tất cả loại phòng
- * GET
+ * Lấy danh sách tất cả loại phòng có phân trang
  */
 const getAllRoomTypes = async (req, res) => {
   try {
@@ -33,13 +32,13 @@ const getAllRoomTypes = async (req, res) => {
 
 /**
  * Get active room types only
- * Lấy Danh sách các hoạt động
+ * Chỉ lấy loại phòng đang hoạt động
  */
 const getActiveRoomTypes = async (req, res) => {
   try {
     const roomTypes = await RoomType.findAll({
-      where: { is_active: true },
-      order: [["base_price", "ASC"]],
+      where: { is_active: true }, //chỉ lấy loại phòng cho phép đặt
+      order: [["base_price", "ASC"]], // sắp xếp giá tăng dần
     });
 
     res.json(successResponse(roomTypes));
@@ -52,6 +51,7 @@ const getActiveRoomTypes = async (req, res) => {
 
 /**
  * Get room type by ID
+ * Lấy chi tiết 1 loại phòng + ds phòng thuộc loại đó
  */
 const getRoomTypeById = async (req, res) => {
   try {
@@ -90,8 +90,8 @@ const createRoomType = async (req, res) => {
     if (!name || !capacity || !base_price) {
       return res.status(400).json(errorResponse("Missing required fields"));
     }
-
-    const exist = await RoomType.findOne({ where: { name } });
+  // (tuỳ chọn) check trùng trước cho message thân thiện
+    const exist = await RoomType.findOne({ where: { name } }); //tránh trùng tên
     if (exist) {
       return res
         .status(400)
@@ -116,6 +116,7 @@ const createRoomType = async (req, res) => {
 
 /**
  * Update room type
+ * Cập nhật loại phòng
  */
 const updateRoomType = async (req, res) => {
   try {
@@ -158,7 +159,7 @@ const deleteRoomType = async (req, res) => {
     }
 
     // Kiểm tra phòng đang dùng loại này
-    const roomsUsing = await Room.count({ where: { room_type_id: id } });
+    const roomsUsing = await Room.count({ where: { room_type_id: id } }); //Nếu có phòng đang dùng → không xóa
     if (roomsUsing > 0) {
       return res
         .status(400)

@@ -9,7 +9,9 @@ const RoomType = sequelize.define('RoomType', {
     },
     name: {
         type: DataTypes.STRING(100),
+        unique: true, // KHÔNG cho trùng tên loại phòng
         allowNull: false,
+        comment:'Tên loại phòng'
     },
     capacity: {
         type: DataTypes.INTEGER,
