@@ -1,11 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const roomController = require('../controllers/roomController');
-<<<<<<< HEAD
 const upload = require('../middlewares/upload');
-=======
-const upload = require('../middleware/upload');
->>>>>>> 11923ed3277ffd570a2d36fe7015645dcee4c27a
 
 /**
  * @swagger
