@@ -128,6 +128,7 @@ const getRoomById = async (req, res) => {
  * Create new room (có upload ảnh)
  */
 const createRoom = async (req, res) => {
+<<<<<<< HEAD
   try {
     const { room_number, room_type_id, status } = req.body;
 
@@ -135,6 +136,31 @@ const createRoom = async (req, res) => {
       return res
         .status(400)
         .json(errorResponse("Room number and room type are required"));
+=======
+    try {
+        const { room_number, room_type_id, status } = req.body;
+
+        if (!room_number || !room_type_id) {
+            return res.status(400).json(errorResponse('Room number and room type are required'));
+        }
+
+        // Get image path from uploaded file
+        const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+        const room = await Room.create({
+            room_number,
+            room_type_id,
+            status: status || 'available',
+            image: imagePath
+        });
+
+        res.status(201).json(successResponse(room, 'Room created successfully'));
+    } catch (error) {
+        if (error.name === 'SequelizeUniqueConstraintError') {
+            return res.status(400).json(errorResponse('Room number already exists'));
+        }
+        res.status(500).json(errorResponse('Error creating room', error.message));
+>>>>>>> 11923ed3277ffd570a2d36fe7015645dcee4c27a
     }
 
     // file do multer xử lý gắn vào req.file
@@ -163,6 +189,7 @@ const createRoom = async (req, res) => {
  * Update room (có thể đổi ảnh)
  */
 const updateRoom = async (req, res) => {
+<<<<<<< HEAD
   try {
     const { id } = req.params;
     const { room_number, room_type_id, status } = req.body;
@@ -170,6 +197,30 @@ const updateRoom = async (req, res) => {
     const room = await Room.findByPk(id);
     if (!room) {
       return res.status(404).json(errorResponse("Room not found"));
+=======
+    try {
+        const { id } = req.params;
+        const { room_number, room_type_id, status } = req.body;
+
+        const room = await Room.findByPk(id);
+        if (!room) {
+            return res.status(404).json(errorResponse('Room not found'));
+        }
+
+        // Get new image path if file was uploaded
+        const imagePath = req.file ? `/uploads/${req.file.filename}` : room.image;
+
+        await room.update({
+            room_number: room_number || room.room_number,
+            room_type_id: room_type_id || room.room_type_id,
+            status: status || room.status,
+            image: imagePath
+        });
+
+        res.json(successResponse(room, 'Room updated successfully'));
+    } catch (error) {
+        res.status(500).json(errorResponse('Error updating room', error.message));
+>>>>>>> 11923ed3277ffd570a2d36fe7015645dcee4c27a
     }
 
     // nếu có upload file mới -> thay ảnh, không thì giữ ảnh cũ

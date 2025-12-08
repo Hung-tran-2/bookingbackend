@@ -1,7 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const roomController = require('../controllers/roomController');
+<<<<<<< HEAD
 const upload = require('../middlewares/upload');
+=======
+const upload = require('../middleware/upload');
+>>>>>>> 11923ed3277ffd570a2d36fe7015645dcee4c27a
 
 /**
  * @swagger
@@ -137,11 +141,11 @@ router.get('/:id', roomController.getRoomById);
  *     tags:
  *       - Rooms
  *     summary: Create a new room
- *     description: Create a new room in the system
+ *     description: Create a new room with optional image upload
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -156,11 +160,12 @@ router.get('/:id', roomController.getRoomById);
  *                 example: 1
  *               status:
  *                 type: string
- *                 enum: [available, occupied, maintenance, reserved]
+ *                 enum: [available, booked, maintenance]
  *                 default: available
  *               image:
  *                 type: string
- *                 example: "https://example.com/room.jpg"
+ *                 format: binary
+ *                 description: Room image file (JPEG, JPG, PNG, GIF, max 5MB)
  *     responses:
  *       201:
  *         description: Room created successfully
@@ -184,7 +189,11 @@ router.post('/', upload.single('image'), roomController.createRoom);
  *     tags:
  *       - Rooms
  *     summary: Update room
+<<<<<<< HEAD
  *     description: Update an existing room's information (with optional new image)
+=======
+ *     description: Update an existing room's information with optional new image
+>>>>>>> 11923ed3277ffd570a2d36fe7015645dcee4c27a
  *     parameters:
  *       - in: path
  *         name: id
@@ -205,11 +214,19 @@ router.post('/', upload.single('image'), roomController.createRoom);
  *                 type: integer
  *               status:
  *                 type: string
+<<<<<<< HEAD
  *                 enum: [available, booked, occupied, cleaning, maintenance]
  *               image:
  *                 type: string
  *                 format: binary
  *                 description: New room image file
+=======
+ *                 enum: [available, booked, maintenance]
+ *               image:
+ *                 type: string
+ *                 format: binary
+ *                 description: New room image file (JPEG, JPG, PNG, GIF, max 5MB)
+>>>>>>> 11923ed3277ffd570a2d36fe7015645dcee4c27a
  *     responses:
  *       200:
  *         description: Room updated successfully

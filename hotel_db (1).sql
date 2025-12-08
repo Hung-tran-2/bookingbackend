@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS `room_types` (
   `room_type_id` int(11) NOT NULL AUTO_INCREMENT COMMENT 'ID loại phòng',
   `name` varchar(100) NOT NULL COMMENT 'Tên loại phòng',
   `capacity` int(11) NOT NULL COMMENT 'Số người',
-  `price` decimal(10,2) NOT NULL COMMENT 'Giá phòng',
+  `base_price` decimal(10,2) NOT NULL COMMENT 'Giá phòng',
   `description` text COMMENT 'Mô tả',
   `is_active` tinyint(1) DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,

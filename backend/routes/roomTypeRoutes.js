@@ -123,7 +123,7 @@ router.get('/:id', roomTypeController.getRoomTypeById);
  *             required:
  *               - name
  *               - capacity
- *               - price
+ *               - base_price
  *             properties:
  *               name:
  *                 type: string
@@ -131,9 +131,10 @@ router.get('/:id', roomTypeController.getRoomTypeById);
  *               capacity:
  *                 type: integer
  *                 example: 2
- *               price:
+ *               base_price:
  *                 type: number
  *                 example: 800000
+ *                 description: Giá phòng cơ bản
  *               description:
  *                 type: string
  *                 example: Phòng cao cấp 2 người
@@ -182,8 +183,9 @@ router.post('/', roomTypeController.createRoomType);
  *                 type: string
  *               capacity:
  *                 type: integer
- *               price:
+ *               base_price:
  *                 type: number
+ *                 description: Giá phòng cơ bản
  *               description:
  *                 type: string
  *               is_active:

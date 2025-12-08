@@ -17,6 +17,9 @@ app.use(express.urlencoded({ extended: true }));
 // THÊM ĐOẠN NÀY: cho phép FE truy cập ảnh
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve static files from uploads directory
+app.use('/uploads', express.static('uploads'));
+
 // Swagger Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     customCss: '.swagger-ui .topbar { display: none }',
