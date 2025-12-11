@@ -47,6 +47,7 @@ const getServiceById = async (req, res) => {
  */
 const createService = async (req, res) => {
     try {
+        console.log("Creating service with body:", req.body);
         const { name, price, unit } = req.body;
 
         if (!name || price === undefined) {

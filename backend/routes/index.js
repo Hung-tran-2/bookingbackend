@@ -15,7 +15,7 @@ const invoiceRoutes = require('./invoiceRoutes');
 // Mount routes
 router.use('/auth', authRoutes);
 router.use('/users', userRoutes);
-router.use('/room-types', roomTypeRoutes);
+router.use('/room-types', roomTypeRoutes);//http://localhost:5000/api/room-types
 router.use('/rooms', roomRoutes);
 router.use('/bookings', bookingRoutes);
 router.use('/services', serviceRoutes);

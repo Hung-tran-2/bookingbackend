@@ -10,6 +10,7 @@ const Service = require('./Service');
 const ServiceUsage = require('./ServiceUsage');
 const Payment = require('./Payment');
 const Invoice = require('./Invoice');
+const OtpLog = require('./OtpLog');
 
 // Define associations
 
@@ -35,7 +36,6 @@ Room.belongsTo(RoomType, {
     foreignKey: 'room_type_id',
     as: 'roomType'
 });
-module.exports = { RoomType, Room };
 
 // Booking <-> Room (Many-to-Many through BookingRoom)
 Booking.belongsToMany(Room, {
@@ -52,6 +52,10 @@ Room.belongsToMany(Booking, {
 });
 
 // Direct associations for BookingRoom
+Booking.hasMany(BookingRoom, {
+    foreignKey: 'booking_id',
+    as: 'bookingRooms'
+});
 BookingRoom.belongsTo(Booking, {
     foreignKey: 'booking_id',
     as: 'booking'
@@ -76,6 +80,10 @@ Service.belongsToMany(Booking, {
 });
 
 // Direct associations for ServiceUsage
+Booking.hasMany(ServiceUsage, {
+    foreignKey: 'booking_id',
+    as: 'serviceUsages'
+});
 ServiceUsage.belongsTo(Booking, {
     foreignKey: 'booking_id',
     as: 'booking'
@@ -129,5 +137,6 @@ module.exports = {
     Service,
     ServiceUsage,
     Payment,
-    Invoice
+    Invoice,
+    OtpLog
 };

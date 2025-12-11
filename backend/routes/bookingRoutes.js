@@ -252,4 +252,37 @@ router.patch('/:id/status', bookingController.updateBookingStatus);
  */
 router.delete('/:id', bookingController.deleteBooking);
 
+/**
+ * @swagger
+ * /bookings/user/{userId}:
+ *   get:
+ *     tags:
+ *       - Bookings
+ *     summary: Get bookings by user ID
+ *     description: Retrieve all bookings for a specific user
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: List of user bookings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Booking'
+ */
+router.get('/user/:userId', bookingController.getBookingsByUser);
+
 module.exports = router;

@@ -16,6 +16,7 @@ const verifyToken = (req, res, next) => {
 
         // Verify token
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log('Token verified. User:', decoded);
         req.user = decoded; // Add user info to request
         next();
 
@@ -37,6 +38,7 @@ const checkRole = (...allowedRoles) => {
         }
 
         if (!allowedRoles.includes(req.user.role)) {
+            console.log(`Access denied. User role: ${req.user.role}, Required: ${allowedRoles}`);
             return res.status(403).json(errorResponse('Access denied. Insufficient permissions'));
         }
 

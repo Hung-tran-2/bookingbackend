@@ -130,4 +130,71 @@ router.post('/generate/:booking_id', invoiceController.generateInvoice);
  */
 router.delete('/:id', invoiceController.deleteInvoice);
 
+/**
+ * @swagger
+ * /invoices:
+ *   get:
+ *     tags:
+ *       - Invoices
+ *     summary: Get all invoices
+ *     description: Retrieve a list of all invoices
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: List of invoices
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Invoice'
+ */
+router.get('/', invoiceController.getAllInvoices);
+
+/**
+ * @swagger
+ * /invoices/{id}/status:
+ *   put:
+ *     tags:
+ *       - Invoices
+ *     summary: Update invoice status
+ *     description: Update the status of an invoice (and its payment)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Invoice ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [completed, failed]
+ *     responses:
+ *       200:
+ *         description: Status updated successfully
+ */
+router.put('/:id/status', invoiceController.updateInvoiceStatus);
+
 module.exports = router;

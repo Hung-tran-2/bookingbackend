@@ -53,8 +53,8 @@ const getUserById = async (req, res) => {
  */
 const createUser = async (req, res) => {
     try {
-        // Chỉ nhận 4 trường: full_name, email, password, phone
-        const { full_name, email, password, phone } = req.body;
+        // Chỉ nhận 4 trường: full_name, email, password, phone, id_card
+        const { full_name, email, password, phone, id_card } = req.body;
 
         if (!full_name) {
             return res.status(400).json(errorResponse('Full name is required'));
@@ -64,24 +64,28 @@ const createUser = async (req, res) => {
             return res.status(400).json(errorResponse('Email is required'));
         }
 
-        if (!password) {
-            return res.status(400).json(errorResponse('Password is required'));
+        // Nếu không có password, lấy số điện thoại làm password mặc định
+        const finalPassword = password || phone;
+
+        if (!finalPassword) {
+            return res.status(400).json(errorResponse('Password or Phone is required'));
         }
 
-        if (password.length < 6) {
+        if (finalPassword.length < 6) {
             return res.status(400).json(errorResponse('Password must be at least 6 characters'));
         }
 
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(finalPassword, 10);
 
         const user = await User.create({
             full_name,
             email,
             password: hashedPassword,
             phone,
-            id_card: null, // Set null để frontend có thể cập nhật sau
-            role: 'user' // Mặc định role là user
+            id_card: id_card || null,
+            role: 'user', // Mặc định role là user
+            is_verified: true // Admin tạo thì mặc định đã xác thực
         });
 
         const userResponse = { ...user.toJSON() };

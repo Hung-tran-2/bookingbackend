@@ -22,21 +22,30 @@ const Payment = sequelize.define('Payment', {
             min: 0
         }
     },
-    method: {
-        type: DataTypes.ENUM('cash', 'momo', 'vnpay'),
-        defaultValue: 'cash'
+    payment_method: {
+        type: DataTypes.ENUM('cash', 'vnpay', 'momo', 'zalopay'),
+        defaultValue: 'cash',
+        comment: 'Phương thức thanh toán'
     },
-    payment_time: {
+    payment_date: {
         type: DataTypes.DATE,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
+        comment: 'Ngày thanh toán'
     },
-    transaction_code: {
-        type: DataTypes.TEXT,
-        allowNull: true
+    transaction_id: {
+        type: DataTypes.STRING(100),
+        allowNull: true,
+        comment: 'Mã giao dịch từ VNPay/Momo'
     },
     status: {
-        type: DataTypes.BOOLEAN,
-        allowNull: true
+        type: DataTypes.ENUM('pending', 'completed', 'failed', 'refunded'),
+        defaultValue: 'pending',
+        comment: 'Trạng thái thanh toán'
+    },
+    notes: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+        comment: 'Ghi chú'
     }
 }, {
     tableName: 'payments',

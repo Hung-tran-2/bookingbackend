@@ -1,5 +1,6 @@
-  const { User } = require('../models');
+const { User, OtpLog } = require('../models');
 const { successResponse, errorResponse } = require('../utils/responseFormatter');
+const { sendOTP } = require('../utils/mailService');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -8,11 +9,11 @@ const jwt = require('jsonwebtoken');
  */
 const register = async (req, res) => {
     try {
-        const { full_name, phone, email, password, role } = req.body;
+        const { full_name, phone, email, password, role, id_card } = req.body;
 
         // Validation
-        if (!full_name || !email || !password) {
-            return res.status(400).json(errorResponse('Full name, email, and password are required'));
+        if (!full_name || !email || !password || !phone) {
+            return res.status(400).json(errorResponse('Full name, email, phone, and password are required'));
         }
 
         if (password.length < 6) {
@@ -28,21 +29,33 @@ const register = async (req, res) => {
         // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        // Save OTP to log
+        console.log('Attempting to save OTP to log:', { email, otp });
+        const logEntry = await OtpLog.create({
+            email,
+            otp_code: otp
+        });
+        console.log('OTP Log saved:', JSON.stringify(logEntry, null, 2));
+
         // Create user
         const user = await User.create({
             full_name,
             phone,
             email,
             password: hashedPassword,
-            role: role || 'user'
+            id_card: id_card || null,
+            role: role || 'user',
+            otp_code: otp,
+            otp_expires_at: otpExpires,
+            is_verified: false
         });
 
-        // Generate JWT token
-        const token = jwt.sign(
-            { user_id: user.user_id, email: user.email, role: user.role },
-            process.env.JWT_SECRET,
-            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-        );
+        // Send OTP
+        await sendOTP(email, otp);
 
         // Return user without password
         const userResponse = {
@@ -50,14 +63,15 @@ const register = async (req, res) => {
             full_name: user.full_name,
             phone: user.phone,
             email: user.email,
+            id_card: user.id_card,
             role: user.role,
-            created_at: user.created_at
+            created_at: user.created_at,
+            is_verified: false
         };
 
         res.status(201).json(successResponse({
-            user: userResponse,
-            token
-        }, 'User registered successfully'));
+            user: userResponse
+        }, 'User registered successfully. Please check your email for OTP.'));
 
     } catch (error) {
         res.status(500).json(errorResponse('Error registering user', error.message));
@@ -82,6 +96,10 @@ const login = async (req, res) => {
             return res.status(401).json(errorResponse('Invalid email or password'));
         }
 
+        if (!user.is_verified) {
+            return res.status(401).json(errorResponse('Account not verified. Please verify your email.'));
+        }
+
         // Check password
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
@@ -101,6 +119,7 @@ const login = async (req, res) => {
             full_name: user.full_name,
             phone: user.phone,
             email: user.email,
+            id_card: user.id_card,
             role: user.role,
             created_at: user.created_at
         };
@@ -205,10 +224,71 @@ const changePassword = async (req, res) => {
     }
 };
 
+/**
+ * Verify account with OTP
+ */
+const verifyAccount = async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json(errorResponse('Email and OTP are required'));
+        }
+
+        const user = await User.findOne({ where: { email } });
+        if (!user) {
+            return res.status(404).json(errorResponse('User not found'));
+        }
+
+        if (user.is_verified) {
+            return res.status(400).json(errorResponse('Account already verified'));
+        }
+
+        if (user.otp_code !== otp) {
+            return res.status(400).json(errorResponse('Invalid OTP'));
+        }
+
+        if (new Date() > user.otp_expires_at) {
+            return res.status(400).json(errorResponse('OTP expired'));
+        }
+
+        // Verify user
+        await user.update({
+            is_verified: true,
+            otp_code: null,
+            otp_expires_at: null
+        });
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { user_id: user.user_id, email: user.email, role: user.role },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+        );
+
+        res.json(successResponse({
+            token,
+            user: {
+                user_id: user.user_id,
+                email: user.email,
+                full_name: user.full_name,
+                phone: user.phone,
+                id_card: user.id_card,
+                role: user.role,
+                is_verified: true
+            }
+        }, 'Account verified successfully'));
+
+    } catch (error) {
+        res.status(500).json(errorResponse('Error verifying account', error.message));
+    }
+};
+
 module.exports = {
     register,
     login,
     getProfile,
     updateProfile,
-    changePassword
+    changePassword,
+    verifyAccount
 };

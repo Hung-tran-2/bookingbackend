@@ -18,7 +18,7 @@ const createAdmin = async () => {
                 phone: '0909000000',
                 password: hashedPassword,
                 role: 'admin',
-                is_active: true
+                is_verified: true  // Admin luôn được verify sẵn
             }
         });
 
@@ -31,6 +31,7 @@ const createAdmin = async () => {
             // Update password if needed
             user.password = hashedPassword;
             user.role = 'admin';
+            user.is_verified = true;  // Đảm bảo admin luôn được verify
             await user.save();
             console.log('✅ Admin password reset to default');
         }

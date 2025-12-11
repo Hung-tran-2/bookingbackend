@@ -67,10 +67,11 @@ const startServer = async () => {
         console.log('✓ Database connected');
 
 
-        // Start Express server
-        app.listen(PORT, () => {
+        // Start Express server - Listen on all interfaces for Android access
+        app.listen(PORT, '0.0.0.0', () => {
             console.log(`🚀 Server running on port ${PORT}`);
-            console.log(`📍 http://localhost:${PORT}/api\n`);
+            console.log(`📍 Local: http://localhost:${PORT}/api`);
+            console.log(`📍 Network: http://0.0.0.0:${PORT}/api\n`);
         });
     } catch (error) {
         console.error('✗ Database connection failed:', error.message);

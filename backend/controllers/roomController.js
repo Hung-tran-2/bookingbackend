@@ -1,6 +1,8 @@
 const { Room, RoomType, Booking } = require('../models');
 const { successResponse, errorResponse, paginationResponse } = require('../utils/responseFormatter');
 const { Op } = require('sequelize');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Get all rooms with pagination
@@ -91,6 +93,9 @@ const createRoom = async (req, res) => {
         // Get image path from uploaded file
         const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
 
+        console.log('Creating room with body:', req.body);
+        console.log('Creating room with file:', req.file);
+
         const room = await Room.create({
             room_number,
             room_type_id,
@@ -100,6 +105,7 @@ const createRoom = async (req, res) => {
 
         res.status(201).json(successResponse(room, 'Room created successfully'));
     } catch (error) {
+        console.error('Error in createRoom:', error);
         if (error.name === 'SequelizeUniqueConstraintError') {
             return res.status(400).json(errorResponse('Room number already exists'));
         }
@@ -121,7 +127,29 @@ const updateRoom = async (req, res) => {
         }
 
         // Get new image path if file was uploaded
-        const imagePath = req.file ? `/uploads/${req.file.filename}` : room.image;
+        let imagePath = room.image;
+
+        // If new image is uploaded and room has old image, delete the old one
+        if (req.file) {
+            if (room.image) {
+                // Construct the full path to the old image
+                const oldImagePath = path.join(__dirname, '..', room.image);
+
+                // Check if old image exists and delete it
+                if (fs.existsSync(oldImagePath)) {
+                    try {
+                        fs.unlinkSync(oldImagePath);
+                        console.log(`✓ Deleted old image: ${room.image}`);
+                    } catch (err) {
+                        console.error(`✗ Error deleting old image: ${err.message}`);
+                        // Continue even if deletion fails
+                    }
+                }
+            }
+
+            // Set new image path
+            imagePath = `/uploads/${req.file.filename}`;
+        }
 
         await room.update({
             room_number: room_number || room.room_number,

@@ -1,4 +1,4 @@
-const { Invoice, Booking, Payment, BookingRoom, ServiceUsage } = require('../models');
+const { Invoice, Booking, Payment, BookingRoom, ServiceUsage, Room, User, Service } = require('../models');
 const { successResponse, errorResponse } = require('../utils/responseFormatter');
 
 /**
@@ -131,8 +131,154 @@ const deleteInvoice = async (req, res) => {
     }
 };
 
+/**
+ * Get all invoices with pagination
+ */
+const getAllInvoices = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+        const offset = (page - 1) * limit;
+
+        // Query Payment table directly since Invoice table might be empty
+        const { count, rows } = await Payment.findAndCountAll({
+            include: [
+                {
+                    model: Booking,
+                    as: 'booking',
+                    include: [
+                        { model: User, as: 'user', attributes: ['user_id', 'full_name', 'email', 'phone'] },
+                        {
+                            model: BookingRoom,
+                            as: 'bookingRooms',
+                            include: [{ model: Room, as: 'room' }]
+                        },
+                        {
+                            model: ServiceUsage,
+                            as: 'serviceUsages',
+                            include: [{ model: Service, as: 'service' }]
+                        }
+                    ]
+                }
+            ],
+            limit,
+            offset,
+            order: [['payment_date', 'DESC']]
+        });
+
+        // Map Payment data to look like Invoice data for frontend compatibility
+        const mappedRows = rows.map(payment => {
+            const booking = payment.booking;
+            let roomTotal = 0;
+            let serviceTotal = 0;
+
+            if (booking) {
+                // Calculate Room Total
+                const checkin = new Date(booking.checkin_date);
+                const checkout = new Date(booking.checkout_date);
+                const nights = Math.max(1, Math.ceil((checkout - checkin) / (1000 * 60 * 60 * 24)));
+
+                roomTotal = booking.bookingRooms?.reduce((sum, br) => {
+                    return sum + (parseFloat(br.price_per_night) * nights);
+                }, 0) || 0;
+
+                // Calculate Service Total
+                serviceTotal = booking.serviceUsages?.reduce((sum, usage) => {
+                    return sum + parseFloat(usage.total_price || 0);
+                }, 0) || 0;
+            }
+
+            return {
+                invoice_id: payment.payment_id, // Virtual Invoice ID
+                booking_id: payment.booking_id,
+
+                // Calculated fields
+                room_charge: roomTotal,
+                service_charge: serviceTotal,
+                total_amount: payment.amount,
+
+                created_at: payment.payment_date,
+                payment: payment, // Nest payment so frontend structure payment.status works
+                booking: payment.booking,
+
+                // Virtual fields if needed
+                status: payment.status
+            };
+        });
+
+        res.json({
+            success: true,
+            data: mappedRows,
+            pagination: {
+                page,
+                limit,
+                total: count,
+                totalPages: Math.ceil(count / limit)
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching invoices:', error);
+        res.status(500).json(errorResponse('Error fetching invoices', error.message));
+    }
+};
+
+/**
+ * Update invoice status (updates underlying Payment)
+ */
+const updateInvoiceStatus = async (req, res) => {
+    try {
+        const { id } = req.params; // payment_id
+        const { status } = req.body; // 'completed' or 'failed'
+
+        const payment = await Payment.findByPk(id, {
+            include: [
+                { model: Booking, as: 'booking' }
+            ]
+        });
+
+        if (!payment) {
+            return res.status(404).json(errorResponse('Payment not found'));
+        }
+
+        // Update Payment status
+        await payment.update({
+            status: status === 'completed' ? 'completed' : 'failed',
+            payment_date: status === 'completed' ? new Date() : payment.payment_date
+        });
+
+        // If completed, update Booking status
+        if (status === 'completed' && payment.booking) {
+            await payment.booking.update({ status: 'confirmed' });
+        }
+
+        // Return updated "invoice" structure
+        const updatedPayment = await Payment.findByPk(id, {
+            include: [
+                { model: Booking, as: 'booking', include: [{ model: User, as: 'user' }] },
+            ]
+        });
+
+        const mappedInvoice = {
+            invoice_id: updatedPayment.payment_id,
+            booking_id: updatedPayment.booking_id,
+            total_amount: updatedPayment.amount,
+            created_at: updatedPayment.payment_date,
+            payment: updatedPayment,
+            booking: updatedPayment.booking,
+            status: updatedPayment.status
+        };
+
+        res.json(successResponse(mappedInvoice, 'Invoice status updated successfully'));
+    } catch (error) {
+        console.error('Error updating invoice status:', error);
+        res.status(500).json(errorResponse('Error updating invoice status', error.message));
+    }
+};
+
 module.exports = {
     getInvoiceByBooking,
     generateInvoice,
-    deleteInvoice
+    deleteInvoice,
+    getAllInvoices,
+    updateInvoiceStatus
 };

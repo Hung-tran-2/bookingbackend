@@ -132,6 +132,67 @@ router.post('/login', authController.login);
 
 /**
  * @swagger
+ * /auth/verify:
+ *   post:
+ *     tags:
+ *       - Authentication
+ *     summary: Verify account with OTP
+ *     description: Verify user account using the OTP sent to email
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Account verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Account verified successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                     user:
+ *                       $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Invalid OTP or expired
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+router.post('/verify', authController.verifyAccount);
+
+/**
+ * @swagger
  * /auth/profile:
  *   get:
  *     tags:

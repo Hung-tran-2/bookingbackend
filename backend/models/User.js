@@ -41,6 +41,18 @@ const User = sequelize.define('User', {
         type: DataTypes.ENUM('user', 'staff', 'admin'),
         allowNull: false,
         defaultValue: 'user'
+    },
+    otp_code: {
+        type: DataTypes.STRING(10),
+        allowNull: true
+    },
+    otp_expires_at: {
+        type: DataTypes.DATE,
+        allowNull: true
+    },
+    is_verified: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false
     }
 }, {
     tableName: 'users',

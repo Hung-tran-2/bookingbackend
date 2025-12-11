@@ -9,11 +9,17 @@ const getAllBookings = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
         const offset = (page - 1) * limit;
-        const { status } = req.query;
+        const { status, checkin_date, checkout_date } = req.query;
 
         const where = {};
         if (status) {
             where.status = status;
+        }
+        if (checkin_date) {
+            where.checkin_date = checkin_date;
+        }
+        if (checkout_date) {
+            where.checkout_date = checkout_date;
         }
 
         const { count, rows } = await Booking.findAndCountAll({
@@ -149,17 +155,39 @@ const updateBookingStatus = async (req, res) => {
 
         await booking.update({ status });
 
-        // If cancelled, update room status back to available
-        if (status === 'cancelled') {
+        // If cancelled or checked_out, check if room can be set to available
+        if (status === 'cancelled' || status === 'checked_out') {
+            const { Op } = require('sequelize');
             const bookingRooms = await BookingRoom.findAll({
                 where: { booking_id: id }
             });
 
             for (const br of bookingRooms) {
-                await Room.update(
-                    { status: 'available' },
-                    { where: { room_id: br.room_id } }
-                );
+                // Check if there are any other active bookings for this room
+                const now = new Date();
+                const otherActiveBookings = await Booking.findAll({
+                    where: {
+                        booking_id: { [Op.ne]: id }, // Exclude current booking
+                        status: { [Op.in]: ['pending', 'confirmed', 'checked_in'] }
+                    },
+                    include: [{
+                        model: BookingRoom,
+                        as: 'bookingRooms',
+                        where: { room_id: br.room_id },
+                        required: true
+                    }]
+                });
+
+                // Only set room to available if no other active bookings exist
+                if (otherActiveBookings.length === 0) {
+                    await Room.update(
+                        { status: 'available' },
+                        { where: { room_id: br.room_id } }
+                    );
+                    console.log(`Room ${br.room_id} set to available (no other active bookings)`);
+                } else {
+                    console.log(`Room ${br.room_id} kept as booked (${otherActiveBookings.length} other active bookings exist)`);
+                }
             }
         }
 
@@ -188,10 +216,72 @@ const deleteBooking = async (req, res) => {
     }
 };
 
+/**
+ * Get bookings by user ID
+ */
+const getBookingsByUser = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        console.log('Fetching bookings for user:', userId);
+
+        const { Service, ServiceUsage, BookingRoom, Payment } = require('../models');
+
+        const bookings = await Booking.findAll({
+            where: { user_id: userId },
+            include: [
+                {
+                    model: Room,
+                    as: 'rooms',
+                    through: { attributes: ['price_per_night'] },
+                    include: [{
+                        model: RoomType,
+                        as: 'roomType',
+                        attributes: ['name']
+                    }]
+                },
+                {
+                    model: BookingRoom,
+                    as: 'bookingRooms',
+                    attributes: ['booking_id', 'room_id', 'price_per_night']
+                },
+                {
+                    model: Service,
+                    as: 'services',
+                    through: {
+                        attributes: ['quantity', 'total_price', 'usage_time']
+                    }
+                },
+                {
+                    model: Payment,
+                    as: 'payments',
+                    attributes: ['payment_id', 'amount', 'status', 'payment_method', 'created_at']
+                }
+            ],
+            order: [['created_at', 'DESC']]
+        });
+
+        // Debug logging
+        console.log(`Found ${bookings.length} bookings for user ${userId}`);
+        if (bookings.length > 0) {
+            console.log('First booking data:');
+            console.log('- Booking ID:', bookings[0].booking_id);
+            console.log('- Rooms count:', bookings[0].rooms?.length);
+            console.log('- BookingRooms count:', bookings[0].bookingRooms?.length);
+            console.log('- BookingRooms data:', JSON.stringify(bookings[0].bookingRooms, null, 2));
+        }
+
+        res.json(successResponse(bookings));
+    } catch (error) {
+        console.error('Error fetching user bookings:', error);
+        res.status(500).json(errorResponse('Error fetching user bookings', error.message));
+    }
+};
+
 module.exports = {
     getAllBookings,
     getBookingById,
     createBooking,
     updateBookingStatus,
-    deleteBooking
+    deleteBooking,
+    getBookingsByUser
 };

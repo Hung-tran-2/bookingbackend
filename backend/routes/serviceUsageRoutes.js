@@ -4,6 +4,31 @@ const serviceUsageController = require('../controllers/serviceUsageController');
 
 /**
  * @swagger
+ * /service-usage/:
+ *   get:
+ *     tags:
+ *       - Service Usage
+ *     summary: Get all service usages (admin)
+ *     description: Retrieve all service usages with pagination
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: List of all service usages
+ */
+router.get('/', serviceUsageController.getAllServiceUsages);
+
+/**
+ * @swagger
  * /service-usage/{booking_id}/services:
  *   get:
  *     tags:
@@ -127,6 +152,9 @@ router.get('/:booking_id/services', serviceUsageController.getBookingServices);
  */
 router.post('/:booking_id/services', serviceUsageController.addServiceToBooking);
 
+
+router.put('/:id', serviceUsageController.updateServiceUsage);
+
 /**
  * @swagger
  * /service-usage/{id}:
@@ -164,5 +192,76 @@ router.post('/:booking_id/services', serviceUsageController.addServiceToBooking)
  *               $ref: '#/components/schemas/Error'
  */
 router.delete('/:id', serviceUsageController.deleteServiceUsage);
+
+// User-facing endpoints (require authentication)
+const { verifyToken } = require('../middleware/auth');
+
+/**
+ * @swagger
+ * /service-usage/request:
+ *   post:
+ *     tags:
+ *       - Service Usage
+ *     summary: User request service (checked-in users only)
+ *     description: Allow checked-in users to request hotel services
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - service_id
+ *               - quantity
+ *             properties:
+ *               service_id:
+ *                 type: integer
+ *                 example: 1
+ *               quantity:
+ *                 type: integer
+ *                 example: 2
+ *     responses:
+ *       201:
+ *         description: Service requested successfully
+ *       403:
+ *         description: User not checked-in
+ *       404:
+ *         description: Service not found
+ */
+router.post('/request', verifyToken, serviceUsageController.requestServiceByUser);
+
+/**
+ * @swagger
+ * /service-usage/my-history:
+ *   get:
+ *     tags:
+ *       - Service Usage
+ *     summary: Get user's service history
+ *     description: Retrieve all services requested by the current user
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Service history retrieved successfully
+ */
+router.get('/my-history', verifyToken, serviceUsageController.getUserServiceHistory);
+
+/**
+ * @swagger
+ * /service-usage/my-booking:
+ *   get:
+ *     tags:
+ *       - Service Usage
+ *     summary: Get user's active booking
+ *     description: Get current user's checked-in booking information
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Active booking information
+ */
+router.get('/my-booking', verifyToken, serviceUsageController.getUserActiveBooking);
 
 module.exports = router;
